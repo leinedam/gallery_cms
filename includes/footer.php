@@ -3,7 +3,7 @@
         <footer class="py-5 bg-white">
           <div class="container">
             <div class="row">
-                <div class="col-lg-6 col-sm-12 text-left ">Copyright &copy; Your Potfolio 2017</div>
+                <div class="col-lg-6 col-sm-12 text-left ">Copyright &copy; Your Potfolio <?php echo date("Y") ;?></div>
                 <div class="col-lg-6 col-sm-12 text-right">By <a href="#">Madeleine Sangoi</a></div>
             </div>
           </div>

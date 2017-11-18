@@ -27,17 +27,20 @@
                                 $image_height = 200;
                         }
                  
-                          $stmt = mysqli_prepare($connection, "SELECT image_title,image_file,image_status,image_category,image_column,image_height  FROM gallery_images ORDER BY image_date desc");
+                 
+                          $stmt = mysqli_prepare($connection, "SELECT image_title,image_file,image_status,image_category,image_column,image_height  FROM gallery_images ORDER BY image_order DESC");
                  
                            mysqli_stmt_execute($stmt);
                            mysqli_stmt_bind_result($stmt,$image_title,$image_file,$image_status,$image_category,$image_column,$image_height);
-                 
-                           while(mysqli_stmt_fetch($stmt)){
 
+
+                        while(mysqli_stmt_fetch($stmt)){
+                             
+                             if($image_status == 'active'){
+                               
+                            
                          ?>
                          
-
-                             
                              <div class="<?php echo $image_column ; ?> filter <?php echo $image_category; ?>">
                                    <div class="gallery_product" style="height:<?php echo $image_height;?>px">
                                          <a href="images/<?php echo $image_file ;?>" class="image-popup" title="Image caption">
@@ -49,7 +52,7 @@
                                     </div>
                             </div>
 
-                    <?php  } ?>
+                    <?php  } } ?>
                     
                     
                 </div>

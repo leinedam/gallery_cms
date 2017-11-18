@@ -1,21 +1,25 @@
 <?php include("includes/delete_modal.php"); ?>
              
-                <?php
+         <?php
 
-                //categories Query
-                $total_images_query = mysqli_query($connection, "SELECT * FROM gallery_images");
-                $total_images = mysqli_num_rows($total_images_query);
+                $total_images_query = mysqli_prepare($connection, "SELECT image_id FROM gallery_images");
 
-             ?>    
+                mysqli_stmt_execute($total_images_query);
+                mysqli_stmt_bind_result($total_images_query, $id );
+                mysqli_stmt_store_result($total_images_query);
+
+                $total_images = mysqli_stmt_num_rows($total_images_query);
+
+        ?>    
                <!-- /.container -->
 
                 <div class="admin-content">
 
                    <h1>Images</h1>
                    <br>
-    
-                   <h5 class="text-right text-success">Total Images <?php echo $total_images ;?></h5>
-                    
+   
+               
+                      <h5 class="text-right text-info">Total Images <?php echo $total_images ;?></h5>
                    <div class="row">
                      <div class="col-md-12">
                        <table class="table">
@@ -27,15 +31,18 @@
                                 <th>Category</th>
                                 <th>Date</th>
                                 <th>Status</th>
-                                <th>Delete</th>
-                                <th>Edit</th>
+                                <th>Columns</th>
+                                <th>Order</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
                               </tr>
                             </thead>
                             <tbody>
                               <?php
-                                
-                                findAllImages();
-                                
+
+                                    findAllImages();
+                               
                                ?> 
                             </tbody>
                           </table>

@@ -9,19 +9,20 @@
 
         if(isset($_POST['add_image'])){
             
-            $image_title = $_POST['image_title'];
-            $image_column = $_POST['image_column'];
-            $image_height = $_POST['image_height'];
-            $image_status = $_POST['image_status'];
-            $image_cat_id = $_POST['image_category'];
-            $image_category = $_POST['image_category'];
-            $image_file = $_FILES['image_file']['name'];
-            $image_file_temp = $_FILES['image_file']['tmp_name'];                          
-            $image_date = escape(date('d-m-y'));                  
+            $image_title = escape($_POST['image_title']);
+            $image_column = escape($_POST['image_column']);
+            $image_height = escape($_POST['image_height']);
+            $image_status = escape($_POST['image_status']);
+            $image_cat_id = escape($_POST['image_category']);
+            $image_category = escape($_POST['image_category']);
+            $image_file = escape($_FILES['image_file']['name']);
+            $image_file_temp = escape($_FILES['image_file']['tmp_name']);                          
+            $image_date = escape(date('d-m-y'));    
+            $image_order = 0 ;    
+     
             
              move_uploaded_file($image_file_temp , "../images/$image_file");
-           
-            
+
 
              if($image_title == "" || empty($image_title) || $image_file == "" || empty($image_file) || $image_height == "" || empty($image_height)){
                 
@@ -30,9 +31,9 @@
                 
             }else{
                 
-                $stmt = mysqli_prepare($connection, "INSERT INTO gallery_images(image_title,image_column,image_height,image_status,image_category,image_file,image_date) VALUES(?,?,?,?,?,?,NOW()) ");
+                $stmt = mysqli_prepare($connection, "INSERT INTO gallery_images( image_title,image_column,image_height,image_status,image_category,image_file,image_order,image_date) VALUES(?,?,?,?,?,?,?,NOW()) ");
 
-                mysqli_stmt_bind_param($stmt, 'ssisis', $image_title, $image_column,$image_height,$image_status,$image_category,$image_file);
+                mysqli_stmt_bind_param($stmt, 'ssisisi', $image_title, $image_column,$image_height,$image_status,$image_category,$image_file,$image_order);
                 
                 mysqli_stmt_execute($stmt);
 
@@ -44,10 +45,36 @@
                
                 mysqli_stmt_close($stmt);
                  
+
                 echo "<div class='alert alert-success' role='alert'><strong>Image Uploaded Successfully </strong> <a href='images.php'>View all Images </a></div>";
+                 
+                 
+                // IMAGE ORDER FUNCTION
+                //GET IMAGE ID
+                $stmt2 = mysqli_prepare($connection, "SELECT image_id FROM gallery_images WHERE image_title = ? " );
+                mysqli_stmt_bind_param($stmt2, "s", $image_title );
+                mysqli_stmt_execute($stmt2);
+                mysqli_stmt_bind_result($stmt2, $image_id);
+                mysqli_stmt_fetch($stmt2);
+                mysqli_stmt_close($stmt2);
+                 
+                 // COUNT ALL ELELEMTNS IN DATABASE
+                 
+                $final_result = countImagesInDatabase();
+                 
+              
+
+                // UPDATING IMAGE ORDER
+                $stmt3 = mysqli_prepare($connection, "UPDATE gallery_images SET image_order = ?  WHERE image_title = ? ");
+                mysqli_stmt_bind_param($stmt3, 'is', $final_result, $image_title );
+                mysqli_stmt_execute($stmt3);
+                mysqli_stmt_close($stmt3);
+
+                 
             }
                      
         }
+
 
     ?>
 

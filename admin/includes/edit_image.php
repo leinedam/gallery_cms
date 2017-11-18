@@ -7,8 +7,10 @@
             $the_img_id = $_GET['edit'];
                 
         
-            $stmt = mysqli_prepare($connection, "SELECT image_id,image_title,image_column,image_height,image_status,image_category,image_file,image_date FROM gallery_images WHERE image_id= {$the_img_id} ");
+            $stmt = mysqli_prepare($connection, "SELECT image_id,image_title,image_column,image_height,image_status,image_category,image_file,image_date FROM gallery_images WHERE image_id= ?  ");
 
+            mysqli_stmt_bind_param($stmt,"i", $the_img_id );
+            
             mysqli_stmt_bind_result($stmt, $image_id, $image_title,$image_column,$image_height,$image_status,$image_category,$image_file, $image_date);
 
             mysqli_stmt_execute($stmt);
@@ -29,24 +31,27 @@
 
         if(isset($_POST['add_image'])){
 
-              $image_title = $_POST['image_title'];
-              $image_file = $_FILES['image_file']['name'];
-              $image_file_temp =  $_FILES['image_file']['tmp_name'];
-              $image_column = $_POST['image_column'];
-              $image_height = $_POST['image_height'];
-              $image_category = $_POST['image_category'];
-              $image_status = $_POST['image_status'];
+              $image_title = escape($_POST['image_title']);
+              $image_file = escape($_FILES['image_file']['name']);
+              $image_file_temp =  escape($_FILES['image_file']['tmp_name']);
+              $image_column = escape($_POST['image_column']);
+              $image_height = escape($_POST['image_height']);
+              $image_category = escape($_POST['image_category']);
+              $image_status = escape($_POST['image_status']);
             
               move_uploaded_file($image_file_temp, "../images/$image_file");
             
-                if(empty($image_file)){
-
-                    $query = "SELECT * FROM gallery_images WHERE image_id = {$the_img_id} ";
-                    $select_image = mysqli_query($connection, $query);
-
-                    while($row = mysqli_fetch_array($select_image)){
-                        $image_file = escape($row['image_file']);
-                    }
+              if(empty($image_file)){
+             
+                    $stmt = mysqli_prepare( $connection, "SELECT image_file FROM gallery_images WHERE image_id = ? ");
+                    
+                    mysqli_stmt_bind_param($stmt,"i",$the_img_id);
+                    mysqli_stmt_execute($stmt);
+                    mysqli_stmt_bind_result($stmt,$image_file);
+                    
+                    mysqli_stmt_fetch($stmt);
+                    mysqli_stmt_close($stmt);
+ 
                 }
 
               $stmt = mysqli_prepare($connection, "UPDATE gallery_images SET image_title = ?, image_file = ?, image_column = ?, image_height= ?, image_category = ?, image_status=?  WHERE image_id = ? " );
@@ -63,11 +68,9 @@
 
               }
               mysqli_stmt_close($stmt);
-
-             
+     
         }
-            
-   
+        
 
     ?>
 
@@ -100,8 +103,9 @@
                                <select class="form-control" id="image_column" name="image_column">
 
                                     <?php
-                                     $stmt2= mysqli_prepare($connection, "SELECT image_column FROM gallery_images WHERE image_id={$image_id} ");
-                                   
+                                     $stmt2= mysqli_prepare($connection, "SELECT image_column FROM gallery_images WHERE image_id= ? ");
+                                
+                                     mysqli_stmt_bind_param($stmt2,"i", $image_id );
                                      mysqli_stmt_execute($stmt2);
                                      mysqli_stmt_bind_result($stmt2, $image_column);
                                    
@@ -111,8 +115,6 @@
                                    
                                     while(mysqli_stmt_fetch($stmt2)){
                                         
-                                      
-                                            
                                          echo "<option value='$image_column'>$image_column</option>";
                                             
                            
@@ -151,11 +153,12 @@
                              <select class="form-control" id="image_status" name="image_status">
                               
                                 <?php
-                                     $stmt4= mysqli_prepare($connection, "SELECT image_status FROM gallery_images WHERE image_id={$image_id} ");
+                                     $stmt4= mysqli_prepare($connection, "SELECT image_status FROM gallery_images WHERE image_id= ? ");
                                      
+                                     mysqli_stmt_bind_param($stmt4,"i", $image_id );
                                      mysqli_stmt_execute($stmt4);
                                      mysqli_stmt_bind_result($stmt4, $image_status);
-                                 
+ 
                                      while(mysqli_stmt_fetch($stmt4)){
 
                                      echo "<option value='$image_status'>{$image_status}</option>";
@@ -179,7 +182,8 @@
                                <label for="image_category">Category</label>
                                <select class="form-control" id="image_category" name="image_category">
                                  <?php
-                                         $stmt3= mysqli_prepare($connection, "SELECT cat_id,cat_title FROM categories WHERE cat_id= $image_category  ");
+                                         $stmt3= mysqli_prepare($connection, "SELECT cat_id,cat_title FROM categories WHERE cat_id= ?  ");
+                                         mysqli_stmt_bind_param($stmt3,"i", $image_category );
                                          mysqli_stmt_execute($stmt3);
                                          mysqli_stmt_bind_result($stmt3, $cat_id, $cat_title);
 
@@ -188,24 +192,19 @@
                                                   echo "<option value='$cat_id'>{$cat_title}</option>";
                                          } 
                                    
-                                   
                                          $stmt5= mysqli_prepare($connection, "SELECT cat_id, cat_title FROM categories");
                                          mysqli_stmt_execute($stmt5);
                                          mysqli_stmt_bind_result($stmt5, $cat_id2, $cat_title2);
 
                                           while(mysqli_stmt_fetch($stmt5)){
-                                                
-                                              
-                                                  echo "<option value='$cat_id2'>{$cat_title2}</option>";
+
+                                            echo "<option value='$cat_id2'>{$cat_title2}</option>";
                                        
                                                   
                                          } 
                                     ?>
                                </select>
                               </div>
-                          
-                          
-                          
                             </div>
                             <button type="submit" name="add_image" class="btn btn-primary">Save</button>
                         </form>

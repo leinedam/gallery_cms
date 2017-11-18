@@ -9,18 +9,36 @@
   $year = date("Y");
   $month = date("m");
   $day = date("d");
+  $page = 'gallerypage';
 
   // gets the user IP Address
   $user_ip=$_SERVER['REMOTE_ADDR'];
 
-  $check_ip = mysqli_query($connection, "select userip from pageview where page='gallerypage' and userip='$user_ip'");
-  if(mysqli_num_rows($check_ip)>=1)
+
+
+$check_ip = mysqli_prepare($connection, "SELECT userip FROM pageview where page= ?  and userip= ? ");
+
+     mysqli_stmt_bind_param($check_ip,"ss", $page,$user_ip  );
+     mysqli_stmt_execute($check_ip);
+     mysqli_stmt_bind_result($check_ip, $ip);
+     mysqli_stmt_store_result($check_ip);
+
+
+if(mysqli_stmt_num_rows($check_ip)>=1)
   {
   }
   else
   {
-    $insertview = mysqli_query($connection, "insert into pageview values('','gallerypage','$user_ip','$year','$month','$day')");
-  }
+    $insertview = mysqli_prepare($connection, "insert INTO pageview(page,userip,year,month,day) VALUES(?,?,?,?,?)");
+      
+    mysqli_stmt_bind_param($insertview, 'sssss', $page, $user_ip, $year, $month, $day );
+                
+    mysqli_stmt_execute($insertview);
+      
+    mysqli_stmt_close($insertview);
+      
+  }      
+
 ?>
 
 

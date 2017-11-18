@@ -7,43 +7,53 @@
 
         if(isset($_SESSION['username'])){
 
-                $username = $_SESSION['username'];
+                $usernamed =  $_SESSION['username'];
+                $usernamed = escape($usernamed);
 
-                $query = "SELECT * FROM users WHERE username = '{$username}' ";
-
-                $select_user_profile = mysqli_query($connection, $query);
-
-                while($row = mysqli_fetch_array($select_user_profile)){
-
-                        $user_id = $row['user_id'];
-                        $username = $row['username'];
-                        $first_name =  $row['first_name'];
-                        $last_name =   $row['last_name'];
-                        $user_password = $row['user_password'];
-                        $user_email = $row['user_email'];
- 
-                }
-         
+                $stmt = mysqli_prepare($connection, "SELECT user_id,username,first_name,last_name,user_password,user_email FROM users WHERE username = ? " );
+                mysqli_stmt_bind_param($stmt, "s", $usernamed );
+            
+                mysqli_stmt_execute($stmt);
+            
+                mysqli_stmt_bind_result($stmt, $user_id, $username,$first_name,$last_name,$user_password, $user_email);
+             
+                mysqli_stmt_fetch($stmt);
+            
+                mysqli_stmt_close($stmt);
+             
+            
+        }
+              
                  if(isset($_POST['edit_user'])){
                      
-
-                        $user_email = escape($_POST['user_email']);
-                        $user_password = escape($_POST['user_password']);
-                        $first_name =  escape($_POST['first_name']);
-                        $last_name =   escape($_POST['last_name']);
+                       
+            
+                     
+                        $user_email = $_POST['user_email'];
+                        $user_password = $_POST['user_password'];
+                        $first_name=  $_POST['first_name'];
+                        $last_name =  $_POST['last_name'];
+                     
+                        $user_email = escape($user_email);
+                        $user_password = escape($user_password);
+                        $first_name = escape($first_name);
+                        $last_name = escape($last_name);
+                   
                      
                      
-                         if(!empty($user_password)){
+                        if(!empty($user_password)){
 
-                        $query_password = "SELECT user_password FROM users WHERE user_id = {$user_id} ";
-                        $get_user = mysqli_query($connection, $query_password);
-
-                        confirmQuery($get_user);
-
-                        $row = mysqli_fetch_array($get_user);
-
-                        $db_user_password = $row['user_password'];
-
+                        $stmt2 =  mysqli_prepare($connection, "SELECT user_password FROM users WHERE user_id = ? " );
+                            
+                        mysqli_stmt_bind_param($stmt2, "i", $user_id );
+                    
+                        mysqli_stmt_execute($stmt2);
+                            
+                        mysqli_stmt_bind_result($stmt2, $db_user_password);
+                             
+                        mysqli_stmt_fetch($stmt2);
+                            
+                   
                          if($db_user_password != $user_password){
 
                             $hashed_password = password_hash($user_password, PASSWORD_BCRYPT, array('cost' => 12));
@@ -52,23 +62,18 @@
                             {
                                 $hashed_password = $user_password;
                             }
+                            
+                           mysqli_stmt_close($stmt2);
+   
+                           $stmtupdate = mysqli_prepare($connection, "UPDATE users SET user_email = ? , first_name = ?, last_name = ?, user_password = ? WHERE username = ? " );
 
-                            $query = "UPDATE users SET ";
-                            $query .= "user_email = '{$user_email}', ";
-                            $query .= "first_name = '{$first_name}', ";
-                            $query .= "last_name = '{$last_name}', ";
-                            $query .= "user_password = '{$hashed_password}' ";
-                            $query .= "WHERE username = '{$username}' ";
+                            mysqli_stmt_bind_param($stmtupdate, "sssss", $user_email, $first_name, $last_name, $hashed_password, $username );
 
-                            $update_user = mysqli_query($connection, $query);
-
-                            confirmQuery($update_user);
-
+                            mysqli_stmt_execute($stmtupdate);
+                             
                             }
-
-                          }
-
-                    }    
+                     }
+                      
 
         ?>     
              

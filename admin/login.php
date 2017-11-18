@@ -12,7 +12,6 @@ session_start();
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,28 +46,22 @@ session_start();
         $username = $_POST['username'];
         $password = $_POST['user_password'];
             
-        $username = trim($username);
-        $password = trim($password);
+        $username = escape($username);
+        $password = escape($password);
         
-        $username = mysqli_real_escape_string($connection, $username);
-        $password = mysqli_real_escape_string($connection, $password);
             
         
-        $query = "SELECT * FROM users WHERE username = '{$username}' ";
+        $stmt = mysqli_prepare($connection, "SELECT user_id,username,user_password,user_email FROM users WHERE username = ? ");
             
-        $select_user_query = mysqli_query($connection, $query);
+        mysqli_stmt_bind_param($stmt, "s", $username );
             
-        if(!$select_user_query){
-            die("QUERY FAILED" . mysqli_error($connection));
-        }
-        
+        mysqli_stmt_execute($stmt);
+            
+        mysqli_stmt_bind_result($stmt, $db_id, $db_username, $db_user_password, $db_user_email);
+            
+       
 
-        while($row = mysqli_fetch_array($select_user_query)){
-            
-            $db_id = $row['user_id'];
-            $db_username = $row['username'];
-            $db_user_password = $row['user_password'];
-            $db_user_email = $row['user_email'];
+        while(mysqli_stmt_fetch($stmt)){
             
         
         if(password_verify($password, $db_user_password)){
@@ -77,16 +70,18 @@ session_start();
                 $_SESSION['username'] = $db_username;
                 $_SESSION['user_email'] = $db_user_email;
            
-
                header("Location: index.php");
+               return true;
 
             }else{
 
-                 return false;
-
+                $message = "<div class='alert alert-danger' role='alert'><strong>The Username or Password is incorrect</strong></div>";
+//               header("Location: login.php");
+//               
+//               return false;
             } 
         }
-       return true;
+     //  return true;
               
    }
 
@@ -102,6 +97,7 @@ session_start();
 
              <div class="row">
                <div class="col-md-12">
+                   <?php  if(isset($_POST['loginuser'])){ echo $message; } ?>
                     <form action="" method="post" >
                       <div class="form-group ">
                        <label for="username">Username</label>

@@ -158,17 +158,43 @@ function deleteCategories(){
 #
 #############################################
 
-function findAllImages(){
+function findAllImages($order_type){
     
       global $connection;
     
+    
+      switch($order_type){
+                case 'Order';
+                $order = "gallery_images.image_order DESC";
+                break;
 
-        $stmt =  mysqli_prepare($connection, "SELECT gallery_images.image_id,  gallery_images.image_order,gallery_images.image_file, gallery_images.image_title, gallery_images.image_category, gallery_images.image_date, gallery_images.image_status,  gallery_images.image_column, categories.cat_title, categories.cat_id FROM gallery_images LEFT JOIN categories ON gallery_images.image_category = categories.cat_id ORDER BY gallery_images.image_order DESC");
+                case 'Newest';
+                $order = "gallery_images.image_date";
+                break;
+
+                case 'Oldest';
+                $order =  'gallery_images.image_date DESC';
+                break;
+
+                case 'Name';
+                $order = 'gallery_images.image_title';
+                break;
+
+                case 'Category';
+                $order = 'gallery_images.image_category DESC';
+                break;
+
+            default:
+                $order = "gallery_images.image_order DESC";
+                break;
+        }
+
+        $stmt =  mysqli_prepare($connection, "SELECT gallery_images.image_id, gallery_images.image_file, gallery_images.image_title, gallery_images.image_category, gallery_images.image_date, gallery_images.image_status, categories.cat_title, categories.cat_id FROM gallery_images LEFT JOIN categories ON gallery_images.image_category = categories.cat_id ORDER BY $order");
              
     
     
          mysqli_stmt_execute($stmt);
-         mysqli_stmt_bind_result($stmt, $image_id, $image_order, $image_file, $image_title, $image_category, $image_date, $image_status, $image_column ,$cat_title, $cat_id);
+         mysqli_stmt_bind_result($stmt, $image_id, $image_file, $image_title, $image_category, $image_date, $image_status, $cat_title, $cat_id);
            
 
          while(mysqli_stmt_fetch($stmt)){
@@ -181,7 +207,6 @@ function findAllImages(){
              echo "<td>{$cat_title}</td>";
              echo "<td>{$image_date}</td>";
              echo "<td>{$image_status}</td>";
-             echo "<td>{$image_column}</td>";
              echo "<td><a href='images.php?orderup={$image_id}' class='btn btn-info' ><i class='fa fa-chevron-up' aria-hidden='true'></i> </a></td>";
              echo "<td><a href='images.php?orderdown={$image_id}' class='btn btn-info' ><i class='fa fa-chevron-down' aria-hidden='true'></i> </a></td>";
              echo "<td><a rel='{$image_id}'  href='javascript:void(0)' class='delete_link btn btn-danger'>Delete</a></td>";  
@@ -194,53 +219,16 @@ function findAllImages(){
     
       if(isset($_GET['delete'])){ 
       
-            $the_image_id = mysqli_real_escape_string($connection, $_GET['delete']);
-
-            $stmt = mysqli_prepare($connection,  "DELETE FROM gallery_images WHERE image_id = ? " );
-
-            mysqli_stmt_bind_param($stmt,"i", $the_image_id );    
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_fetch($stmt);
-          
-            mysqli_stmt_close($stmt);
-          
+                $the_image_id = mysqli_real_escape_string($connection, $_GET['delete']);
            
-      //          $final_result = countImagesInDatabase();
-          
-          
-                // GET ALL IMAGES IDS
-//                 $stmt3 = mysqli_prepare($connection, "SELECT image_id FROM gallery_images");
-//                 mysqli_stmt_execute($stmt3);
-//                 mysqli_stmt_bind_result($stmt3, $image_id);
-//          
-//          
-//                 while(mysqli_stmt_fetch($stmt3)){
-//                     
-//                     print_r (explode(" ",$image_id));
-//                     
-//                 }
-//                    
+                $stmt = mysqli_prepare($connection,  "DELETE FROM gallery_images WHERE image_id = ? " );
 
-//          
-//              for($i = 1; $i <= $final_result ; $i++){
-//                  
-//                  
-//                  
-//                    // update the NEXT order image
-//                    $stmt2 = mysqli_prepare($connection, " UPDATE gallery_images 
-//                                    SET image_order =  $i - 1
-//                                    WHERE image_id = $image_array ");
-//                  
-//                    mysqli_stmt_execute($stmt2);
+                mysqli_stmt_bind_param($stmt,"i", $the_image_id );    
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_fetch($stmt);
 
-//              }
-          
-          
-          
-         // refresh page
-         header("Location: images.php");
-          
-          
+                 // refresh page
+                header("Location: images.php");
       }
     
     
@@ -250,111 +238,100 @@ function findAllImages(){
 
         $final_result = countImagesInDatabase();
 
-        // select next image ORDER
-        $stmt = mysqli_prepare($connection, " SELECT image_order from gallery_images  WHERE image_id = ? ");
-        mysqli_stmt_bind_param($stmt,"i", $the_image_id );   
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $next_order);
+                // select next image
+        $query3 = " SELECT image_order from gallery_images  WHERE image_id = {$the_image_id} ";
         
-        while(mysqli_stmt_fetch($stmt)){
-            
-             $next_order = $next_order + 1;
-            
-        }
+        $order_query3 = mysqli_query($connection, $query3);
+
         
-        mysqli_stmt_close($stmt);
+          while($row = mysqli_fetch_array($order_query3)){
+          
+                    $next_order = $row['image_order'];
+                    $next_order = $next_order + 1;
+          
+         }
         
-        if($final_result  >= $next_order ){
-
+        if($final_result >= $next_order){
             
-             // update the NEXT order image
-            $stmt2 = mysqli_prepare($connection, " UPDATE gallery_images 
-                            SET image_order = ( ? * image_order / ? ) - 1
-                            WHERE image_order = ? ");
-            
-            mysqli_stmt_bind_param($stmt2, "iii", $final_result, $final_result, $next_order);
-                        
-            mysqli_stmt_execute($stmt2);
+                        // update the next image
+            $query2 = " UPDATE gallery_images 
+                            SET image_order = ($final_result * image_order / $final_result) - 1
+                            WHERE image_order = $next_order ";
 
-            mysqli_stmt_close($stmt2);
+            $order_query2 = mysqli_query($connection, $query2);
 
-            // update the CURRENT order image
-           $stmt3 = mysqli_prepare($connection, " UPDATE gallery_images 
-                            SET image_order = (? * image_order / ?) + 1
-                            WHERE image_id = ? ") ;
-            
-            mysqli_stmt_bind_param($stmt3, "iii", $final_result, $final_result, $the_image_id);
 
-            mysqli_stmt_execute($stmt3);
+            $query = " UPDATE gallery_images 
+                            SET image_order = ($final_result * image_order / $final_result) + 1
+                            WHERE image_id = {$the_image_id} ";
 
-            mysqli_stmt_close($stmt3);
+            $order_query = mysqli_query($connection, $query);
+
 
             header("Location: images.php");
             
         }else{
             
-
+            echo "This image is already the first";
+            
         }
         
     }
     
- 
+    
+    
         if(isset($_GET['orderdown'])){
         
         $the_image_id = escape($_GET['orderdown']);
 
-        
         $final_result = countImagesInDatabase();
 
-        // select next image ORDER
-        $stmt = mysqli_prepare($connection, " SELECT image_order from gallery_images  WHERE image_id = ? ");
-        mysqli_stmt_bind_param($stmt,"i", $the_image_id );   
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $next_order);
+                // select next image
+        $query3 = " SELECT image_order from gallery_images  WHERE image_id = {$the_image_id} ";
         
-        while(mysqli_stmt_fetch($stmt)){
-            
-             $next_order = $next_order - 1;
-            
-        }
-        mysqli_stmt_close($stmt);
-            
+        $order_query3 = mysqli_query($connection, $query3);
+
+        
+          while($row = mysqli_fetch_array($order_query3)){
+          
+                    $next_order = $row['image_order'];
+                    $next_order = $next_order - 1;
+          
+         }
+        
 
             if( $next_order > 0 ){
-                
-             // update the NEXT order image
-            $stmt2 = mysqli_prepare($connection, " UPDATE gallery_images 
-                            SET image_order = ( ? * image_order / ? ) + 1
-                            WHERE image_order = ? ");
+                       
+            // update the next image
+            $query2 = " UPDATE gallery_images 
+                            SET image_order = ($final_result * image_order / $final_result) + 1
+                            WHERE image_order = $next_order ";
+
+            $order_query2 = mysqli_query($connection, $query2);
             
-            mysqli_stmt_bind_param($stmt2, "iii", $final_result, $final_result, $next_order);
-                        
-            mysqli_stmt_execute($stmt2);
 
-            mysqli_stmt_close($stmt2);
+            $query = " UPDATE gallery_images 
+                            SET image_order = ($final_result * image_order / $final_result) - 1
+                            WHERE image_id = {$the_image_id} ";
 
-            // update the CURRENT order image
-           $stmt3 = mysqli_prepare($connection, " UPDATE gallery_images 
-                            SET image_order = (? * image_order / ?) - 1
-                            WHERE image_id = ? ") ;
+            $order_query = mysqli_query($connection, $query);
             
-            mysqli_stmt_bind_param($stmt3, "iii", $final_result, $final_result, $the_image_id);
+           
 
-            mysqli_stmt_execute($stmt3);
-
-            mysqli_stmt_close($stmt3);
 
             header("Location: images.php");
                 
-    
-                
             }else{
                 
-              
+                echo "This image is already the Last";
             }
-
+            
+      
+        
     }
+    
 
+  
 
 }
 

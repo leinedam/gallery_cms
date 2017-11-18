@@ -2,38 +2,25 @@
     <?php include "includes/header.php"; ?>
     <?php include "includes/navigation.php"; ?>
 
- <?php
-                           
+ <?php                      
          $year = date("Y");
          $month = date("m");
          $monthText = date("M");
          $day = date("d");
+         $page = 'gallerypage';
 
+        //total views in current current year
+        $year_views = userViewsQueryResult($year, $month, $day, $page, 'year');
 
+        //total views in current current month 
+        $month_views = userViewsQueryResult($year, $month, $day, $page, 'month'); 
 
-        //total views in current year
-
-        $year_query = mysqli_query($connection, "SELECT * FROM pageview where page='gallerypage' and year='$year' " );
-        $year_views = mysqli_num_rows($year_query);
-
-        //total views in current current month
-
-        $month_query = mysqli_query($connection, "SELECT * FROM pageview where page='gallerypage' and year='$year' and month='$month'" );
-        $month_views = mysqli_num_rows($month_query);
-
-        //total views in current current day
-
-        $day_query = mysqli_query($connection, "SELECT * FROM pageview where page='gallerypage' and year='$year' and month='$month' and day='$day' ");
-        $day_views = mysqli_num_rows($day_query);
+        //total views in current current day 
+        $day_views =  userViewsQueryResult($year, $month, $day, $page, 'day'); 
 
         //all time views
-        $total_query = mysqli_query($connection, "SELECT * FROM pageview where page='gallerypage'");
-        $total_views = mysqli_num_rows($total_query);
-
-
-
-
-                           
+        $total_views =  userViewsQueryResult($year, $month, $day, $page, 'total'); 
+                  
  ?>
 
                            <!-- /.container -->
@@ -56,7 +43,7 @@
                        <div class="card-block">
                          <blockquote class="card-blockquote">
                            <h2>MONTH ( <?php echo $monthText ;?> )</h2>
-                           <p><?php echo $month_views ;?></p>
+                           <p><?php echo $month_views; ?></p>
                          </blockquote>
                        </div>
                      </div>
@@ -64,7 +51,7 @@
                        <div class="card-block">
                          <blockquote class="card-blockquote">
                            <h2>DAY ( <?php echo $day ;?> )</h2>
-                           <p><?php echo $day_views ;?></p>
+                           <p> <?php echo $day_views; ?></p>
                          </blockquote>
                        </div>
                      </div>

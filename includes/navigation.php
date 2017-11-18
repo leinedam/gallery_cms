@@ -10,6 +10,9 @@
                     </a>
                 </li>
                 <li>
+                    <a href="index.php"><i class="fa fa-plus" aria-hidden="true"></i>Gallery</a>
+                </li>
+                <li>
                     <a href="about.php"><i class="fa fa-plus" aria-hidden="true"></i>About</a>
                 </li>
                 <li>
